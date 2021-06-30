@@ -1,0 +1,59 @@
+// Pre-requisite Objects, Fields and Records:
+// Custom Object 'Admin Settings' with custom field 'Price Adjustment Rate'
+// Internal APIs: Admin_Settings_c and Price_Adjustment_Rate__c
+// One record in Admin Settings named 'Current Rate'
+
+global class CalloutAndUpdateKPI Implements Schedulable {
+	
+    //Set the execution of methods in the schedule, defined using Setup|Config
+    global void execute(SchedulableContext sc)
+        {
+            getUpdatedKPI();
+        }
+    
+    //Sets asynchronous method and callout
+    @future(callout=true)
+    
+	public static void getUpdatedKPI() {
+ 		//Defined query from SSB APItool
+        String queryString = '{"query":[{"code":"Leveringssektor","selection":{"filter":"item","values":["B2"]}},{"code":"ContentsCode","selection":{"filter":"item","values":["Tolvmanedersendring"]}},{"code":"Tid","selection":{"filter":"top","values":["1"]}}],"response":{"format":"json-stat2"}}';
+        
+        // Instantiate a new http object and request, specify method POST and endpoint
+        Http http = new Http();
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('https://data.ssb.no/api/v0/no/table/11117');
+        request.setMethod('POST');
+        
+        //Specify content of the request and body as a JSON object
+        request.setHeader('Content-Type', 'application/json;charset=UTF-8');
+ 		request.setBody(queryString);
+		
+        //Send request and return response
+        HttpResponse response = http.send(request);
+        
+        // Parse the JSON response
+        // In case of failure - Log response
+        if (response.getStatusCode() != 200) {
+            System.debug('The status code returned was not expected: ' +
+                response.getStatusCode() + ' ' + response.getStatus());
+        
+        // If success - Deserialize and extract KPI-value from the query response
+        } else {
+            Map<String, Object> results = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+            List<Object> KPI = (List<Object>) results.get('value');
+            Double currentKPI = Double.valueOf(KPI[0]);
+            System.debug(currentKPI);
+            System.debug('The status code returned was expected: ' +
+                response.getStatusCode() + ' ' + response.getStatus());
+            //Get the current price adjustment rate and update if the rate has changed
+            Admin_Settings__c setting = [SELECT Id, Price_Adjustment_Rate__c FROM Admin_Settings__c WHERE Name = 'Current Rate' LIMIT 1];
+            if (setting.Price_Adjustment_Rate__c != currentKPI) {
+                setting.Price_Adjustment_Rate__c = currentKPI;
+                update setting;
+                System.debug('The value of currentKPI is set as new Price Adjustment Rate');
+            } else {
+                System.debug('No changes registered to the Price Adjustment Rate');
+            }
+        }       
+    }
+}

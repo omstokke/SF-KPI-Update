@@ -1,0 +1,78 @@
+@isTest
+private class TestCalloutAndUpdateKPI {
+	
+    @isTest static void testGetCallout() {
+        // Load mock response to callout from statis resource - GetKPIQuery.txt
+        StaticResourceCalloutMock mockresponse = new StaticResourceCalloutMock();
+        mockresponse.setStaticResource('GetKPIQuery');
+        // Set status code for success and re-assess body as JSON
+        mockresponse.setStatusCode(200);
+        mockresponse.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        // Associate the callout with a mock response
+        Test.setMock(HttpCalloutMock.class, mockresponse);
+        Test.startTest();
+            //Create test record
+            Admin_Settings__c testSetting = new Admin_Settings__c(Name='Current Rate', Price_Adjustment_Rate__c=3.0);
+            insert testSetting;
+            // Call method to test
+            CalloutAndUpdateKPI.getUpdatedKPI();
+        Test.stopTest();
+    }
+    
+    @isTest static void testCalloutFailure() {
+        // Load mock response to callout from statis resource - GetKPIQuery.txt
+        StaticResourceCalloutMock mockresponse = new StaticResourceCalloutMock();
+        mockresponse.setStaticResource('GetKPIQuery');
+        // Set status code for success and re-assess body as JSON
+        mockresponse.setStatusCode(404);
+        mockresponse.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        // Associate the callout with a mock response
+        Test.setMock(HttpCalloutMock.class, mockresponse);
+        Test.startTest();
+            //Create test record
+            Admin_Settings__c testSetting = new Admin_Settings__c(Name='Current Rate', Price_Adjustment_Rate__c=3.0);
+            insert testSetting;
+            // Call method to test
+            CalloutAndUpdateKPI.getUpdatedKPI();
+        Test.stopTest();
+    }
+    
+    @isTest static void testNoChange() {
+        // Load mock response to callout from statis resource - GetKPIQuery.txt
+        StaticResourceCalloutMock mockresponse = new StaticResourceCalloutMock();
+        mockresponse.setStaticResource('GetKPIQuery');
+        // Set status code for success and re-assess body as JSON
+        mockresponse.setStatusCode(200);
+        mockresponse.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        // Associate the callout with a mock response
+        Test.setMock(HttpCalloutMock.class, mockresponse);
+        Test.startTest();
+            //Create test record
+            Admin_Settings__c testSetting = new Admin_Settings__c(Name='Current Rate', Price_Adjustment_Rate__c=1.3);
+            insert testSetting;
+            // Call method to test
+            CalloutAndUpdateKPI.getUpdatedKPI();
+        Test.stopTest();
+    }
+    
+    static testMethod void testScheduler() {
+		// Load mock response to callout from statis resource - GetKPIQuery.txt
+        StaticResourceCalloutMock mockresponse = new StaticResourceCalloutMock();
+        mockresponse.setStaticResource('GetKPIQuery');
+        // Set status code for success and re-assess body as JSON
+        mockresponse.setStatusCode(200);
+        mockresponse.setHeader('Content-Type', 'application/json;charset=UTF-8');
+        // Associate the callout with a mock response
+        Test.setMock(HttpCalloutMock.class, mockresponse);
+        Test.startTest();
+	    //Create test record
+            Admin_Settings__c testSetting = new Admin_Settings__c(Name='Current Rate', Price_Adjustment_Rate__c=3.0);
+            insert testSetting;
+        	
+            //Schedule test job
+            String CRON_test = '0 0 * * * ?';
+            String testJob = System.schedule('testScheduledKPICheck', CRON_test, new CalloutAndUpdateKPI());
+            System.debug(testJob+' has been scheduled');
+	    Test.stopTest();
+    }
+}

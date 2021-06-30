@@ -1,0 +1,34 @@
+{
+  "query": [
+    {
+      "code": "Leveringssektor",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "B2"
+        ]
+      }
+    },
+    {
+      "code": "ContentsCode",
+      "selection": {
+        "filter": "item",
+        "values": [
+          "Tolvmanedersendring"
+        ]
+      }
+    },
+    {
+      "code": "Tid",
+      "selection": {
+        "filter": "top",
+        "values": [
+          "1"
+        ]
+      }
+    }
+  ],
+  "response": {
+    "format": "json-stat2"
+  }
+}
